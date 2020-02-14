@@ -11,10 +11,15 @@ gracefulFs.gracefulify(realFs);
 
 const userNodeVersion = Number(process.version.split('.')[0].slice(1));
 
-// only check for components if user is running Node 8
+/**
+ * Components Logic - Check if user is using Node 8, and/or a Components-specific command...
+ */
 if (userNodeVersion >= 8) {
   const components = require('@serverless/components');
-  if (components.runningComponents()) {
+  if (process.argv[2] === 'registry') {
+    components.cli();
+    return;
+  } else if (components.runningComponents()) {
     components.cli();
     return;
   }
