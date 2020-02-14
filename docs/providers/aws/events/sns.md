@@ -1,7 +1,7 @@
 <!--
 title: Serverless Framework - AWS Lambda Events - SNS
 menuText: SNS
-menuOrder: 6
+menuOrder: 7
 description:  Setting up AWS SNS Events with AWS Lambda via the Serverless Framework
 layout: Doc
 -->
@@ -145,4 +145,26 @@ functions:
             pet:
               - dog
               - cat
+```
+
+## Setting a redrive policy
+
+This event definition creates an SNS topic that sends messages to a Dead Letter Queue (defined by its ARN) when the associated lambda is not available. In this example, messages that aren't delivered to the `dispatcher` Lambda (because the lambda service is down or irresponsive) will end in `myDLQ`
+
+```yml
+functions:
+  dispatcher:
+    handler: dispatcher.handler
+    events:
+      - sns:
+          topicName: dispatcher
+          redrivePolicy:
+            deadLetterTargetArn: !Ref myDLQ
+
+resources:
+  Resources:
+    myDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: myDLQ
 ```

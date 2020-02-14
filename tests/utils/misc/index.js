@@ -1,12 +1,8 @@
 'use strict';
 
-const BbPromise = require('bluebird');
-const CloudWatchLogsSdk = require('aws-sdk/clients/cloudwatchlogs');
+const awsRequest = require('@serverless/test/aws-request');
 
 const logger = console;
-
-const region = 'us-east-1';
-const cloudWatchLogsSdk = new CloudWatchLogsSdk({ region });
 
 const testServiceIdentifier = 'integ-test';
 
@@ -39,43 +35,27 @@ function replaceEnv(values) {
  * This function allows to confirm that new setting (turned on cloudwatch logs)
  * is effective after stack deployment
  */
-function confirmCloudWatchLogs(logGroupName, trigger, timeout = 60000) {
+function confirmCloudWatchLogs(logGroupName, trigger, options = {}) {
   const startTime = Date.now();
+  const timeout = options.timeout || 60000;
   return trigger()
-    .then(() => cloudWatchLogsSdk.filterLogEvents({ logGroupName }).promise())
-    .then(result => {
-      if (result.events.length) return result.events;
+    .then(() => awsRequest('CloudWatchLogs', 'filterLogEvents', { logGroupName }))
+    .then(({ events }) => {
+      if (events.length) {
+        if (options.checkIsComplete) {
+          if (options.checkIsComplete(events)) return events;
+        } else {
+          return events;
+        }
+      }
       const duration = Date.now() - startTime;
       if (duration > timeout) return [];
-      return confirmCloudWatchLogs(logGroupName, trigger, timeout - duration);
+      return confirmCloudWatchLogs(
+        logGroupName,
+        trigger,
+        Object.assign({}, options, { timeout: timeout - duration })
+      );
     });
-}
-
-function persistentRequest(...args) {
-  const func = args[0];
-  const funcArgs = args.slice(1);
-  const MAX_TRIES = 5;
-  return new BbPromise((resolve, reject) => {
-    const doCall = numTry => {
-      return func.apply(this, funcArgs).then(resolve, e => {
-        if (
-          numTry < MAX_TRIES &&
-          ((e.providerError && e.providerError.retryable) || e.statusCode === 429)
-        ) {
-          logger.log(
-            [
-              `Recoverable error occurred (${e.message}), sleeping for 5 seconds.`,
-              `Try ${numTry + 1} of ${MAX_TRIES}`,
-            ].join(' ')
-          );
-          setTimeout(doCall, 5000, numTry + 1);
-        } else {
-          reject(e);
-        }
-      });
-    };
-    return doCall(0);
-  });
 }
 
 function wait(ms) {
@@ -83,13 +63,11 @@ function wait(ms) {
 }
 
 module.exports = {
-  logger,
-  region,
   confirmCloudWatchLogs,
-  testServiceIdentifier,
-  serviceNameRegex,
   getServiceName,
+  logger,
   replaceEnv,
-  persistentRequest,
+  serviceNameRegex,
+  testServiceIdentifier,
   wait,
 };
