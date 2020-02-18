@@ -156,13 +156,8 @@
     "xml2js": "^0.4.23"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@serverless/components": "beta",
-    "@serverless/enterprise-plugin": "^3.2.5",
-=======
-    "@serverless/cli": "^1.4.0",
     "@serverless/enterprise-plugin": "^3.3.0",
->>>>>>> master
     "archiver": "^1.3.0",
     "async": "^1.5.2",
     "aws-sdk": "^2.610.0",
