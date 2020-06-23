@@ -190,7 +190,7 @@
   "dependencies": {
     "@serverless/cli": "^1.5.0",
     "@serverless/components": "^2.30.15",
-    "@serverless/enterprise-plugin": "^3.6.13",
+    "@serverless/enterprise-plugin": "next",
     "@serverless/inquirer": "^1.1.2",
     "@serverless/utils": "^1.1.0",
     "archiver": "^3.1.1",
